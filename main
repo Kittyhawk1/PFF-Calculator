@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Economics PPF Calculator</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --bg: #0b1120;
+      --bg-top: #111a2e;
+      --card: #162033;
+      --text: #e6edf7;
+      --muted: #9fb0c8;
+      --accent: #6ea8fe;
+      --accent-soft: #1d3357;
+      --border: #2a3b57;
+      --good: #5ee2a0;
+      --input-bg: #0f1728;
+      --shadow: rgba(0, 0, 0, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at top, var(--bg-top) 0%, var(--bg) 60%, #070b14 100%);
+      color: var(--text);
+    }
+
+    .layout {
+      width: min(1080px, calc(100% - 2rem));
+      margin: 2rem auto;
+      display: grid;
+      gap: 1.5rem;
+      grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 1.25rem;
+      box-shadow: 0 18px 45px var(--shadow);
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { font-size: clamp(1.8rem, 2vw, 2.5rem); margin-bottom: 0.5rem; }
+    .subtitle { color: var(--muted); line-height: 1.5; }
+
+    .inputs {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1rem;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.35rem;
+    }
+
+    input {
+      width: 100%;
+      padding: 0.8rem 0.9rem;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      font: inherit;
+      color: inherit;
+      background: var(--input-bg);
+    }
+
+    input:focus {
+      outline: 2px solid rgba(110, 168, 254, 0.35);
+      border-color: var(--accent);
+    }
+
+    .full { grid-column: 1 / -1; }
+    .hint { font-size: 0.92rem; color: var(--muted); margin-top: 0.35rem; }
+
+    .summary {
+      display: grid;
+      gap: 0.9rem;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      margin-top: 1rem;
+    }
+
+    .stat {
+      background: var(--accent-soft);
+      border-radius: 14px;
+      padding: 0.9rem;
+    }
+
+    .stat small {
+      display: block;
+      color: var(--muted);
+      margin-bottom: 0.35rem;
+    }
+
+    .stat strong { font-size: 1.15rem; }
+
+    canvas {
+      width: 100%;
+      height: auto;
+      background: linear-gradient(180deg, #0f1728 0%, #16233a 100%);
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      margin-top: 0.75rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 0.9rem;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 0.7rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th { color: var(--muted); font-weight: 600; }
+    .badge {
+      display: inline-block;
+      background: rgba(94, 226, 160, 0.16);
+      color: var(--good);
+      border-radius: 999px;
+      padding: 0.25rem 0.7rem;
+      font-size: 0.84rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+    }
+
+    @media (max-width: 680px) {
+      .inputs { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="layout">
+    <section class="panel">
+      <span class="badge">Economics Tool</span>
+      <h1>PPF Calculator</h1>
+      <p class="subtitle">
+        Explore a simple production possibilities frontier (PPF) for two goods. Adjust maximum output and opportunity cost assumptions to instantly see the slope, intercepts, and sample efficient combinations.
+      </p>
+
+      <div class="inputs">
+        <div>
+          <label for="goodAName">Good A name</label>
+          <input id="goodAName" value="Robots" />
+        </div>
+        <div>
+          <label for="goodBName">Good B name</label>
+          <input id="goodBName" value="Wheat" />
+        </div>
+        <div>
+          <label for="goodAMax">Max units of Good A</label>
+          <input id="goodAMax" type="number" min="0.1" step="0.1" value="100" />
+        </div>
+        <div>
+          <label for="goodBMax">Max units of Good B</label>
+          <input id="goodBMax" type="number" min="0.1" step="0.1" value="200" />
+        </div>
+        <div>
+          <label for="costA">Opportunity cost of 1 unit of Good A</label>
+          <input id="costA" type="number" min="0.01" step="0.01" value="2" />
+          <p class="hint">Measured in units of Good B given up.</p>
+        </div>
+        <div>
+          <label for="costB">Opportunity cost of 1 unit of Good B</label>
+          <input id="costB" type="number" min="0.01" step="0.01" value="0.5" />
+          <p class="hint">Measured in units of Good A given up.</p>
+        </div>
+        <div class="full">
+          <label for="resourceUnits">Shared resource capacity</label>
+          <input id="resourceUnits" type="number" min="1" step="1" value="100" />
+          <p class="hint">Used to estimate productivity per resource unit and check whether your opportunity cost assumptions are internally consistent.</p>
+        </div>
+      </div>
+
+      <div class="summary" id="summary"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Frontier Graph</h2>
+      <p class="subtitle">The graph shows a straight-line PPF from producing only Good B to producing only Good A.</p>
+      <canvas id="ppfChart" width="540" height="360"></canvas>
+      <h3>Efficient points</h3>
+      <table>
+        <thead>
+          <tr>
+            <th id="colA">Good A</th>
+            <th id="colB">Good B</th>
+            <th>Interpretation</th>
+          </tr>
+        </thead>
+        <tbody id="pointsBody"></tbody>
+      </table>
+    </section>
+  </main>
+
+  <script>
+    const ids = ["goodAName", "goodBName", "goodAMax", "goodBMax", "costA", "costB", "resourceUnits"];
+    const els = Object.fromEntries(ids.map((id) => [id, document.getElementById(id)]));
+    const summary = document.getElementById("summary");
+    const pointsBody = document.getElementById("pointsBody");
+    const colA = document.getElementById("colA");
+    const colB = document.getElementById("colB");
+    const canvas = document.getElementById("ppfChart");
+    const ctx = canvas.getContext("2d");
+
+    const format = (value) => Number(value).toLocaleString(undefined, { maximumFractionDigits: 2 });
+
+    function readModel() {
+      const model = {
+        goodAName: els.goodAName.value.trim() || "Good A",
+        goodBName: els.goodBName.value.trim() || "Good B",
+        goodAMax: Math.max(Number(els.goodAMax.value) || 0, 0.1),
+        goodBMax: Math.max(Number(els.goodBMax.value) || 0, 0.1),
+        costA: Math.max(Number(els.costA.value) || 0, 0.01),
+        costB: Math.max(Number(els.costB.value) || 0, 0.01),
+        resourceUnits: Math.max(Number(els.resourceUnits.value) || 0, 1),
+      };
+
+      model.slope = -(model.goodBMax / model.goodAMax);
+      model.aPerResource = model.goodAMax / model.resourceUnits;
+      model.bPerResource = model.goodBMax / model.resourceUnits;
+      model.impliedCostA = model.bPerResource / model.aPerResource;
+      model.impliedCostB = model.aPerResource / model.bPerResource;
+      model.consistent = Math.abs(model.impliedCostA - model.costA) < 0.15 && Math.abs(model.impliedCostB - model.costB) < 0.15;
+      return model;
+    }
+
+    function renderSummary(model) {
+      const cards = [
+        ["PPF equation", `${model.goodBName} = ${format(model.goodBMax)} ${model.slope < 0 ? "-" : "+"} ${format(Math.abs(model.slope))} × ${model.goodAName}`],
+        ["Intercepts", `${format(model.goodAMax)} ${model.goodAName}, ${format(model.goodBMax)} ${model.goodBName}`],
+        ["Slope", `${format(model.slope)} ${model.goodBName} per ${model.goodAName}`],
+        ["Consistency check", model.consistent ? "Costs align with the max-output assumptions." : `Entered costs imply ${format(model.impliedCostA)} ${model.goodBName}/${model.goodAName} and ${format(model.impliedCostB)} ${model.goodAName}/${model.goodBName}.`],
+      ];
+
+      summary.innerHTML = cards.map(([label, value]) => `
+        <article class="stat">
+          <small>${label}</small>
+          <strong>${value}</strong>
+        </article>
+      `).join("");
+    }
+
+    function renderPoints(model) {
+      colA.textContent = model.goodAName;
+      colB.textContent = model.goodBName;
+      const shares = [0, 0.25, 0.5, 0.75, 1];
+      const rows = shares.map((share, index) => {
+        const a = model.goodAMax * share;
+        const b = model.goodBMax * (1 - share);
+        const label = index === 0 ? `All resources in ${model.goodBName}` : index === shares.length - 1 ? `All resources in ${model.goodAName}` : "Efficient mixed production";
+        return `<tr><td>${format(a)}</td><td>${format(b)}</td><td>${label}</td></tr>`;
+      });
+      pointsBody.innerHTML = rows.join("");
+    }
+
+    function drawGraph(model) {
+      const { width, height } = canvas;
+      const pad = 42;
+      ctx.clearRect(0, 0, width, height);
+
+      ctx.strokeStyle = "#40536f";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(pad, height - pad);
+      ctx.lineTo(width - 18, height - pad);
+      ctx.moveTo(pad, height - pad);
+      ctx.lineTo(pad, 18);
+      ctx.stroke();
+
+      const xScale = (x) => pad + (x / model.goodAMax) * (width - pad - 30);
+      const yScale = (y) => height - pad - (y / model.goodBMax) * (height - pad - 26);
+
+      ctx.fillStyle = "#9fb0c8";
+      ctx.font = "14px sans-serif";
+      ctx.fillText(model.goodAName, width - 84, height - 10);
+      ctx.save();
+      ctx.translate(10, 82);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText(model.goodBName, 0, 0);
+      ctx.restore();
+
+      ctx.strokeStyle = "#6ea8fe";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(xScale(0), yScale(model.goodBMax));
+      ctx.lineTo(xScale(model.goodAMax), yScale(0));
+      ctx.stroke();
+
+      const sampleShares = [0, 0.25, 0.5, 0.75, 1];
+      ctx.fillStyle = "#5ee2a0";
+      for (const share of sampleShares) {
+        const x = model.goodAMax * share;
+        const y = model.goodBMax * (1 - share);
+        ctx.beginPath();
+        ctx.arc(xScale(x), yScale(y), 5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.fillStyle = "#e6edf7";
+      ctx.fillText("0", pad - 12, height - pad + 18);
+      ctx.fillText(format(model.goodAMax), width - 72, height - pad + 18);
+      ctx.fillText(format(model.goodBMax), pad - 8, 28);
+    }
+
+    function render() {
+      const model = readModel();
+      renderSummary(model);
+      renderPoints(model);
+      drawGraph(model);
+    }
+
+    ids.forEach((id) => els[id].addEventListener("input", render));
+    render();
+  </script>
+</body>
+</html>
